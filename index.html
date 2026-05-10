@@ -9,7 +9,6 @@
             --bg: #f0f2f5; --card: #ffffff; --text: #333;
             --yes: #4caf50; --no: #f44336; --maybe: #ffc107; --primary: #4a90e2;
         }
-        /* 深夜模式顏色定義 */
         body.dark-mode {
             --bg: #1a1a1a; --card: #2d2d2d; --text: #f0f0f0; --primary: #75b5ff;
         }
@@ -18,67 +17,59 @@
             font-family: 'PingFang TC', sans-serif; background-color: var(--bg); color: var(--text);
             display: flex; flex-direction: column; align-items: center; 
             height: 100vh; margin: 0; overflow: hidden; touch-action: none;
-            transition: background-color 0.3s, color 0.3s;
+            transition: background-color 0.3s;
         }
 
-        /* 主選單介面 */
+        /* 主選單 */
         #main-menu {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            width: 100%; height: 100%; z-index: 10; transition: transform 0.5s ease;
+            width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: var(--bg); z-index: 10;
         }
         .menu-btn {
             width: 220px; padding: 18px; margin: 12px; border: none; border-radius: 15px;
-            background: var(--primary); color: white; font-size: 1.2rem; font-weight: bold; 
-            cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            background: var(--primary); color: white; font-size: 1.2rem; font-weight: bold; cursor: pointer;
         }
-        .dark-toggle-container {
-            position: fixed; bottom: 30px; right: 30px; display: flex; align-items: center; gap: 10px;
-        }
-        /* 切換開關樣式 */
-        .switch {
-            position: relative; display: inline-block; width: 50px; height: 26px;
-        }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider {
-            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #ccc; transition: .4s; border-radius: 34px;
-        }
-        .slider:before {
-            position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px;
-            background-color: white; transition: .4s; border-radius: 50%;
-        }
-        input:checked + .slider { background-color: var(--primary); }
-        input:checked + .slider:before { transform: translateX(24px); }
 
-        /* 練習介面 (預設隱藏) */
-        #game-view { display: none; width: 90%; max-width: 400px; text-align: center; flex-grow: 1; }
-        .status-header { height: 60px; display: flex; align-items: center; justify-content: center; position: relative; margin-top: 20px;}
+        /* 練習畫面 */
+        #game-view { 
+            display: none; flex-direction: column; align-items: center; 
+            width: 90%; max-width: 400px; height: 100%; padding-top: 20px;
+        }
+        .status-header { height: 60px; display: flex; align-items: center; justify-content: center; width: 100%; position: relative; }
         .status-text { position: absolute; font-size: 2.2rem; font-weight: 900; opacity: 0; color: white; text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
 
         .card-wrapper { position: relative; width: 100%; height: 380px; margin-top: 10px; }
         .card {
             position: absolute; width: 100%; height: 100%; background: var(--card); border-radius: 25px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center;
-            font-size: 2.5rem; font-weight: bold; padding: 25px; box-sizing: border-box; z-index: 2;
+            font-size: 2.5rem; font-weight: bold; padding: 25px; box-sizing: border-box; 
             opacity: 0; transform: scale(0.9); transition: opacity 0.4s, transform 0.4s;
         }
         .card.active { opacity: 1; transform: scale(1); }
         
-        .back-btn { margin-top: 30px; background: none; border: 1.5px solid var(--text); color: var(--text); padding: 10px 20px; border-radius: 25px; cursor: pointer; opacity: 0.7; }
+        /* 深色模式撥鈕 */
+        .dark-mode-switch { position: fixed; bottom: 30px; right: 30px; display: flex; align-items: center; gap: 10px; font-size: 0.8rem; }
+        .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--primary); }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        .back-btn { margin-top: 20px; background: none; border: 1px solid var(--text); color: var(--text); padding: 8px 16px; border-radius: 20px; }
     </style>
 </head>
 <body>
 
 <div id="main-menu">
-    <h1 style="font-size: 2.5rem; margin-bottom: 5px;">日文單字修行</h1>
-    <p id="total-stats" style="margin-bottom: 30px; opacity: 0.8;">讀取中...</p>
-    <button class="menu-btn" onclick="startSession('practice')">開始練習 (15題)</button>
-    <button class="menu-btn" style="background:#777;" onclick="startSession('all')">複習全部</button>
-    
-    <div class="dark-toggle-container">
-        <span style="font-size: 0.9rem;">深夜模式</span>
+    <h1>日文單字修行</h1>
+    <p id="stats-text" style="opacity: 0.7;">載入資料中...</p>
+    <button class="menu-btn" onclick="startPractice()">開始練習 (15題)</button>
+    <button class="menu-btn" style="background:#888;" onclick="startAll()">瀏覽全部</button>
+    <div class="dark-mode-switch">
+        <span>深夜模式</span>
         <label class="switch">
-            <input type="checkbox" id="dark-mode-input" onchange="toggleDarkMode()">
+            <input type="checkbox" id="dark-input" onchange="setDarkMode()">
             <span class="slider"></span>
         </label>
     </div>
@@ -86,169 +77,153 @@
 
 <div id="game-view">
     <div class="status-header">
-        <div id="textYes" class="status-text">會了</div>
-        <div id="textNo" class="status-text">不會</div>
-        <div id="textMaybe" class="status-text">不熟</div>
+        <div id="text-yes" class="status-text">會了</div>
+        <div id="text-no" class="status-text">不會</div>
+        <div id="text-maybe" class="status-text">不熟</div>
     </div>
-    <div id="progress" style="margin-bottom: 10px; font-weight: bold;"></div>
-    <div class="card-wrapper"><div class="card" id="card"></div></div>
-    <button class="back-btn" onclick="goToMenu()">退出練習</button>
+    <div id="progress-text" style="font-weight: bold; margin-bottom: 10px;"></div>
+    <div class="card-wrapper">
+        <div class="card" id="card"></div>
+    </div>
+    <button class="back-btn" onclick="backToMenu()">回主選單</button>
 </div>
 
 <script>
-    let allWords = [];
-    let currentPool = [];
-    let currentIndex = 0;
-    let isFlipped = false;
-    let startX = 0, startY = 0, currentX = 0, currentY = 0;
-    
-    // 記憶資料庫
-    let memory = JSON.parse(localStorage.getItem('vocab_v3_data')) || {};
+    let words = [];
+    let pool = [];
+    let idx = 0;
+    let flipped = false;
+    let sX, sY, cX, cY;
+    let mem = JSON.parse(localStorage.getItem('jap_mem_v4')) || {};
 
-    // 初始化深色模式
-    if (localStorage.getItem('dark-mode') === 'true') {
+    // 1. 初始化深色模式
+    if (localStorage.getItem('dark') === 'true') {
         document.body.classList.add('dark-mode');
-        document.getElementById('dark-mode-input').checked = true;
+        document.getElementById('dark-input').checked = true;
+    }
+    function setDarkMode() {
+        const isDark = document.body.classList.toggle('dark-mode');
+        localStorage.setItem('dark', isDark);
     }
 
-    // 載入 CSV
-    fetch('words.csv').then(res => res.text()).then(text => {
-        const lines = text.trim().split('\n');
-        allWords = lines.map((line, i) => {
-            const parts = line.split(',');
-            return { id: `w_${i}`, f: parts[0].trim(), b: parts[1].trim() };
+    // 2. 讀取資料
+    fetch('words.csv').then(r => r.text()).then(t => {
+        words = t.trim().split('\n').map((l, i) => {
+            const p = l.split(',');
+            return { id: 'w'+i, f: p[0].trim(), b: p[1].trim() };
         }).filter(w => w.f);
-        updateMenuStats();
+        updateStats();
     });
 
-    function updateMenuStats() {
-        const mastered = Object.values(memory).filter(v => v >= 3).length;
-        document.getElementById('total-stats').innerText = `總單字：${allWords.length} | 已精通：${mastered}`;
+    function updateStats() {
+        const done = Object.values(mem).filter(v => v >= 3).length;
+        document.getElementById('stats-text').innerText = `總單字：${words.length} | 已精通：${done}`;
     }
 
-    function toggleDarkMode() {
-        const isDark = document.body.classList.toggle('dark-mode');
-        localStorage.setItem('dark-mode', isDark);
+    // 3. 切換視圖
+    function startPractice() {
+        // 智慧抽題：找分數最低的
+        pool = [...words].sort((a,b) => (mem[a.id]||0) - (mem[b.id]||0)).slice(0, 30);
+        pool = pool.sort(() => Math.random() - 0.5).slice(0, 15);
+        openGame();
     }
-
-    // --- 核心邏輯：抽題系統 ---
-    function startSession(type) {
-        currentIndex = 0;
-        if (type === 'all') {
-            currentPool = [...allWords].sort(() => Math.random() - 0.5);
-        } else {
-            // 智慧抽題：
-            // 1. 優先挑選分數低 (不會/不熟) 的單字
-            // 2. 隨機加入少部分高分單字 (低機率複習)
-            const sorted = [...allWords].sort((a, b) => (memory[a.id] || 0) - (memory[b.id] || 0));
-            const weakWords = sorted.slice(0, 30); // 取最不熟的前30個
-            currentPool = weakWords.sort(() => Math.random() - 0.5).slice(0, 15); // 從中隨機抽15個
-        }
-
+    function startAll() {
+        pool = [...words].sort(() => Math.random() - 0.5);
+        openGame();
+    }
+    function openGame() {
+        idx = 0;
         document.getElementById('main-menu').style.display = 'none';
         document.getElementById('game-view').style.display = 'flex';
-        showNextCard();
+        renderCard();
     }
-
-    function goToMenu() {
+    function backToMenu() {
         document.getElementById('main-menu').style.display = 'flex';
         document.getElementById('game-view').style.display = 'none';
-        updateMenuStats();
+        updateStats();
     }
 
-    function showNextCard() {
-        if (currentIndex >= currentPool.length) {
-            alert("本輪練習結束！做的棒！");
-            goToMenu();
-            return;
-        }
-        isFlipped = false;
-        const card = document.getElementById('card');
-        card.classList.remove('active');
+    function renderCard() {
+        if (idx >= pool.length) { alert("練習結束！"); return backToMenu(); }
+        flipped = false;
+        const el = document.getElementById('card');
+        el.classList.remove('active');
+        el.style.opacity = "0";
         setTimeout(() => {
-            card.innerText = currentPool[currentIndex].f;
-            card.style.color = "var(--text)";
-            card.style.transform = "scale(0.9)";
-            card.offsetHeight; 
-            card.classList.add('active');
-            document.getElementById('progress').innerText = `題號：${currentIndex + 1} / ${currentPool.length}`;
+            el.innerText = pool[idx].f;
+            el.style.color = "var(--text)";
+            el.offsetHeight;
+            el.classList.add('active');
+            el.style.opacity = "1";
+            document.getElementById('progress-text').innerText = `進度：${idx + 1} / ${pool.length}`;
         }, 150);
     }
 
-    function saveProgress(type) {
-        const id = currentPool[currentIndex].id;
-        if (!memory[id]) memory[id] = 0;
-        if (type === 'yes') memory[id] += 1;
-        if (type === 'no') memory[id] = Math.max(0, memory[id] - 2);
-        if (type === 'maybe') memory[id] = Math.max(0, memory[id] - 1);
-        localStorage.setItem('vocab_v3_data', JSON.stringify(memory));
-    }
-
-    // --- 滑動與互動邏輯 ---
-    const card = document.getElementById('card');
-    card.addEventListener('click', () => {
-        if (Math.abs(currentX - startX) < 10) {
-            isFlipped = !isFlipped;
-            card.innerText = isFlipped ? currentPool[currentIndex].b : currentPool[currentIndex].f;
-            card.style.color = isFlipped ? "var(--primary)" : "var(--text)";
+    // 4. 滑動邏輯
+    const cardEl = document.getElementById('card');
+    cardEl.addEventListener('click', () => {
+        if (Math.abs(cX - sX) < 10) {
+            flipped = !flipped;
+            cardEl.innerText = flipped ? pool[idx].b : pool[idx].f;
+            cardEl.style.color = flipped ? "var(--primary)" : "var(--text)";
         }
     });
 
-    const handleStart = (e) => {
-        startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-        startY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-        currentX = startX; currentY = startY;
-        card.style.transition = "none";
+    const start = (e) => {
+        sX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        sY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+        cX = sX; cY = sY;
+        cardEl.style.transition = "none";
     };
-
-    const handleMove = (e) => {
-        if (!startX) return;
-        currentX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-        currentY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-        const dx = currentX - startX; const dy = currentY - startY;
-        card.style.transform = `translateX(${dx}px) translateY(${dy}px) rotate(${dx/12}deg)`;
-
-        if (dy > 60 && Math.abs(dy) > Math.abs(dx)) { updateUI('maybe', dy); }
-        else if (dx < -40) { updateUI('yes', -dx); }
-        else if (dx > 40) { updateUI('no', dx); }
-        else { resetUI(); }
-    };
-
-    function updateUI(type, d) {
+    const move = (e) => {
+        if (!sX) return;
+        cX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        cY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+        const dx = cX - sX, dy = cY - sY;
+        cardEl.style.transform = `translate(${dx}px, ${dy}px) rotate(${dx/12}deg)`;
+        
         resetUI();
-        const a = Math.min(d/200, 0.6);
+        if (dy > 60 && Math.abs(dy) > Math.abs(dx)) { showUI('maybe', dy); }
+        else if (dx < -40) { showUI('yes', -dx); }
+        else if (dx > 40) { showUI('no', dx); }
+    };
+    function showUI(type, d) {
+        const a = Math.min(d/200, 0.5);
         document.body.style.backgroundColor = type==='yes' ? `rgba(76,175,80,${a})` : type==='no' ? `rgba(244,67,54,${a})` : `rgba(255,193,7,${a})`;
-        document.getElementById('text'+type.charAt(0).toUpperCase()+type.slice(1)).style.opacity = Math.min(d/100, 1);
+        document.getElementById('text-'+type).style.opacity = Math.min(d/100, 1);
     }
-
     function resetUI() {
         document.body.style.backgroundColor = "var(--bg)";
         document.querySelectorAll('.status-text').forEach(t => t.style.opacity = 0);
     }
-
-    const handleEnd = () => {
-        if (!startX) return;
-        const dx = currentX - startX; const dy = currentY - startY;
-        if (dy > 150) { saveProgress('maybe'); exit('Y', 1000); }
-        else if (Math.abs(dx) > 130) { saveProgress(dx < 0 ? 'yes' : 'no'); exit('X', dx > 0 ? 1000 : -1000, dx/5); }
-        else { card.style.transition = "transform 0.3s ease"; card.style.transform = "translate(0,0) rotate(0)"; resetUI(); }
-        startX = 0;
+    const end = () => {
+        if (!sX) return;
+        const dx = cX - sX, dy = cY - sY;
+        if (dy > 150) { updateMem('maybe'); fly('Y', 1000); }
+        else if (Math.abs(dx) > 130) { updateMem(dx < 0 ? 'yes' : 'no'); fly('X', dx > 0 ? 1000 : -1000, dx/5); }
+        else { cardEl.style.transition = "transform 0.3s"; cardEl.style.transform = "translate(0,0)"; resetUI(); }
+        sX = 0;
     };
-
-    function exit(axis, d, r=0) {
-        card.style.transition = "transform 0.4s ease-in, opacity 0.3s";
-        card.style.transform = axis==='X' ? `translateX(${d}px) rotate(${r}deg)` : `translateY(${d}px)`;
-        card.style.opacity = "0";
-        resetUI(); currentIndex++;
-        setTimeout(showNextCard, 300);
+    function updateMem(t) {
+        const id = pool[idx].id;
+        if(!mem[id]) mem[id] = 0;
+        if(t==='yes') mem[id]++; else mem[id] = Math.max(0, mem[id]-1);
+        localStorage.setItem('jap_mem_v4', JSON.stringify(mem));
+    }
+    function fly(axis, d, r=0) {
+        cardEl.style.transition = "transform 0.4s ease-in, opacity 0.3s";
+        cardEl.style.transform = axis==='X' ? `translateX(${d}px) rotate(${r}deg)` : `translateY(${d}px)`;
+        cardEl.style.opacity = "0";
+        resetUI(); idx++;
+        setTimeout(renderCard, 300);
     }
 
-    card.addEventListener('touchstart', handleStart, {passive: true});
-    card.addEventListener('touchmove', handleMove, {passive: true});
-    card.addEventListener('touchend', handleEnd);
-    card.addEventListener('mousedown', handleStart);
-    window.addEventListener('mousemove', handleMove);
-    window.addEventListener('mouseup', handleEnd);
+    cardEl.addEventListener('touchstart', start, {passive:true});
+    cardEl.addEventListener('touchmove', move, {passive:true});
+    cardEl.addEventListener('touchend', end);
+    cardEl.addEventListener('mousedown', start);
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', end);
 </script>
 </body>
 </html>
