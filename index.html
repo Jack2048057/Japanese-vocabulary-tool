@@ -144,19 +144,34 @@
     }
 
     function renderCard() {
-        if (idx >= pool.length) { alert("練習結束！"); return backToMenu(); }
+        if (idx >= pool.length) { 
+            alert("練習結束！"); 
+            return backToMenu(); 
+        }
+        
         flipped = false;
         const el = document.getElementById('card');
+        
+        // 1. 徹底移除動畫類別與所有行內樣式
         el.classList.remove('active');
+        el.style.transition = "none"; 
         el.style.opacity = "0";
-        setTimeout(() => {
-            el.innerText = pool[idx].f;
-            el.style.color = "var(--text)";
-            el.offsetHeight;
-            el.classList.add('active');
-            el.style.opacity = "1";
-            document.getElementById('progress-text').innerText = `進度：${idx + 1} / ${pool.length}`;
-        }, 150);
+        el.style.transform = "scale(0.9) translate(0, 0) rotate(0)"; // 強制歸零
+        
+        // 2. 換字
+        el.innerText = pool[idx].f;
+        el.style.color = "var(--text)";
+
+        // 3. 關鍵：使用 double requestAnimationFrame 確保瀏覽器完成重置
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                el.style.transition = "opacity 0.4s, transform 0.4s";
+                el.classList.add('active');
+                el.style.opacity = "1";
+                el.style.transform = "scale(1)";
+                document.getElementById('progress-text').innerText = `進度：${idx + 1} / ${pool.length}`;
+            });
+        });
     }
 
     // 4. 滑動邏輯
