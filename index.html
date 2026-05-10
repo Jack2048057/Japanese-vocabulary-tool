@@ -5,18 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>日文單字閃卡 Pro</title>
     <style>
-        :root { --bg: #f0f2f5; --card: #ffffff; --yes: #4caf50; --no: #f44336; }
+        :root { --bg-default: #f0f2f5; --card: #ffffff; --yes: #4caf50; --no: #f44336; --primary: #4a90e2; }
         body { 
-            font-family: 'PingFang TC', sans-serif; background: var(--bg); 
+            font-family: 'PingFang TC', sans-serif; background-color: var(--bg-default); 
             display: flex; flex-direction: column; align-items: center; 
             height: 100vh; margin: 0; overflow: hidden; touch-action: none;
+            transition: background-color 0.3s ease; /* 背景顏色平滑過渡 */
         }
         .container { width: 90%; max-width: 400px; margin-top: 40px; text-align: center; position: relative; flex-grow: 1; }
         
-        /* 卡片容器 */
-        .card-wrapper {
-            position: relative; width: 100%; height: 350px; margin-top: 20px;
-        }
+        .card-wrapper { position: relative; width: 100%; height: 350px; margin-top: 20px; }
 
         .card {
             position: absolute; width: 100%; height: 100%;
@@ -24,15 +22,19 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             display: flex; align-items: center; justify-content: center;
             font-size: 2rem; font-weight: bold; padding: 20px; box-sizing: border-box;
-            transition: transform 0.1s ease-out, background-color 0.3s;
             cursor: grab; user-select: none; z-index: 2;
+            opacity: 0; /* 預設隱藏，用於淡入 */
+            transform: scale(0.9); /* 預設縮小，用於淡入 */
+            transition: opacity 0.6s ease, transform 0.6s ease;
         }
 
-        /* 滑動狀態文字提示 */
+        /* 卡片顯示時的樣式 */
+        .card.active { opacity: 1; transform: scale(1) translateX(0) rotate(0); }
+
         .status-stamp {
-            position: absolute; top: 20px; font-size: 1.5rem; font-weight: bold;
-            padding: 5px 15px; border: 4px solid; border-radius: 10px;
-            opacity: 0; pointer-events: none; z-index: 3;
+            position: absolute; top: 20px; font-size: 1.8rem; font-weight: bold;
+            padding: 5px 20px; border: 4px solid; border-radius: 10px;
+            opacity: 0; pointer-events: none; z-index: 3; transition: opacity 0.2s;
         }
         .stamp-yes { left: 20px; color: var(--yes); border-color: var(--yes); transform: rotate(-15deg); }
         .stamp-no { right: 20px; color: var(--no); border-color: var(--no); transform: rotate(15deg); }
@@ -49,8 +51,7 @@
     <div class="card-wrapper">
         <div id="stampYes" class="status-stamp stamp-yes">會了</div>
         <div id="stampNo" class="status-stamp stamp-no">不會</div>
-        
-        <div class="card" id="card">載入中...</div>
+        <div class="card" id="card"></div>
     </div>
 
     <div class="info">
@@ -62,10 +63,10 @@
     let words = [];
     let currentIndex = 0;
     let isFlipped = false;
-    
-    // 觸控與滑動變數
     let startX = 0;
     let currentX = 0;
+
+    const body = document.body;
     const card = document.getElementById('card');
     const stampYes = document.getElementById('stampYes');
     const stampNo = document.getElementById('stampNo');
@@ -80,31 +81,40 @@
             }).filter(i => i !== null);
             if (words.length > 0) {
                 document.getElementById('title').innerText = "日文單字背誦";
-                updateUI();
+                showNextCard();
             }
         });
 
-    function updateUI() {
+    function showNextCard() {
         isFlipped = false;
-        card.style.transform = "translateX(0) rotate(0)";
-        card.style.backgroundColor = "white";
-        card.innerText = words[currentIndex].f;
-        stampYes.style.opacity = 0;
-        stampNo.style.opacity = 0;
+        card.classList.remove('active'); // 先清空畫面
+        card.style.transition = "none";
+        card.style.transform = "scale(0.9)";
+        
+        // 短暫延遲後浮現新卡片
+        setTimeout(() => {
+            card.innerText = words[currentIndex].f;
+            card.style.color = "black";
+            card.style.transition = "opacity 0.6s ease, transform 0.6s ease";
+            card.classList.add('active');
+            updateProgress();
+        }, 300);
+    }
+
+    function updateProgress() {
         document.getElementById('progress').innerText = `進度：${currentIndex + 1} / ${words.length}`;
     }
 
-    // 點擊翻面
     card.addEventListener('click', () => {
-        if (Math.abs(currentX - startX) < 5) { // 確保不是在滑動
+        if (Math.abs(currentX - startX) < 5) {
             isFlipped = !isFlipped;
             card.innerText = isFlipped ? words[currentIndex].b : words[currentIndex].f;
-            card.style.color = isFlipped ? "#4a90e2" : "black";
+            card.style.color = isFlipped ? "var(--primary)" : "black";
         }
     });
 
-    // 滑動邏輯 (支援手機觸控與滑鼠)
     const handleStart = (e) => {
+        if (!card.classList.contains('active')) return;
         startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
         card.style.transition = "none";
     };
@@ -117,19 +127,19 @@
         
         card.style.transform = `translateX(${diff}px) rotate(${rotation}deg)`;
 
-        // 漸變顏色與文字顯示
-        if (diff < -50) { // 往左滑 (會了)
-            const opacity = Math.min(Math.abs(diff) / 150, 1);
-            card.style.backgroundColor = `rgba(76, 175, 80, ${opacity * 0.3})`;
-            stampYes.style.opacity = opacity;
+        // 修改背景顏色而非卡片顏色
+        if (diff < -30) { // 往左滑 (會了)
+            const alpha = Math.min(Math.abs(diff) / 200, 0.4);
+            body.style.backgroundColor = `rgba(76, 175, 80, ${alpha})`;
+            stampYes.style.opacity = Math.min(Math.abs(diff) / 100, 1);
             stampNo.style.opacity = 0;
-        } else if (diff > 50) { // 往右滑 (不會)
-            const opacity = Math.min(diff / 150, 1);
-            card.style.backgroundColor = `rgba(244, 67, 54, ${opacity * 0.3})`;
-            stampNo.style.opacity = opacity;
+        } else if (diff > 30) { // 往右滑 (不會)
+            const alpha = Math.min(diff / 200, 0.4);
+            body.style.backgroundColor = `rgba(244, 67, 54, ${alpha})`;
+            stampNo.style.opacity = Math.min(diff / 100, 1);
             stampYes.style.opacity = 0;
         } else {
-            card.style.backgroundColor = "white";
+            body.style.backgroundColor = "var(--bg-default)";
             stampYes.style.opacity = 0;
             stampNo.style.opacity = 0;
         }
@@ -137,17 +147,27 @@
 
     const handleEnd = () => {
         const diff = currentX - startX;
-        card.style.transition = "transform 0.4s ease, background-color 0.3s";
-        
-        if (diff < -120) { // 確定往左滑出
-            card.style.transform = "translateX(-1000px) rotate(-30deg)";
-            setTimeout(nextCard, 200);
-        } else if (diff > 120) { // 確定往右滑出
-            card.style.transform = "translateX(1000px) rotate(30deg)";
-            setTimeout(nextCard, 200);
-        } else { // 彈回原位
+        if (!startX) return;
+
+        if (Math.abs(diff) > 120) {
+            // 滑掉卡片
+            const flyX = diff > 0 ? 1000 : -1000;
+            card.style.transition = "transform 0.4s ease-in, opacity 0.4s";
+            card.style.transform = `translateX(${flyX}px) rotate(${diff/5}deg)`;
+            card.style.opacity = "0";
+            
+            // 背景恢復並切換下一張
+            body.style.backgroundColor = "var(--bg-default)";
+            stampYes.style.opacity = 0;
+            stampNo.style.opacity = 0;
+            
+            currentIndex = (currentIndex + 1) % words.length;
+            setTimeout(showNextCard, 400);
+        } else {
+            // 彈回原位
+            card.style.transition = "transform 0.3s ease-out";
             card.style.transform = "translateX(0) rotate(0)";
-            card.style.backgroundColor = "white";
+            body.style.backgroundColor = "var(--bg-default)";
             stampYes.style.opacity = 0;
             stampNo.style.opacity = 0;
         }
@@ -155,19 +175,12 @@
         currentX = 0;
     };
 
-    function nextCard() {
-        currentIndex = (currentIndex + 1) % words.length;
-        updateUI();
-    }
-
-    // 監聽事件
     card.addEventListener('touchstart', handleStart);
     card.addEventListener('touchmove', handleMove);
     card.addEventListener('touchend', handleEnd);
     card.addEventListener('mousedown', handleStart);
     window.addEventListener('mousemove', handleMove);
     window.addEventListener('mouseup', handleEnd);
-
 </script>
 </body>
 </html>
