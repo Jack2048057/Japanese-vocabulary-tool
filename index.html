@@ -3,137 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>日文單字閃卡 Pro - 記憶版</title>
+    <title>日文單字修行 Pro</title>
     <style>
-        :root { --bg-default: #f0f2f5; --card: #ffffff; --yes: #4caf50; --no: #f44336; --maybe: #ffc107; --primary: #4a90e2; }
+        :root {
+            --bg: #f0f2f5; --card: #ffffff; --text: #333;
+            --yes: #4caf50; --no: #f44336; --maybe: #ffc107; --primary: #4a90e2;
+        }
+        /* 深夜模式顏色定義 */
+        body.dark-mode {
+            --bg: #1a1a1a; --card: #2d2d2d; --text: #f0f0f0; --primary: #75b5ff;
+        }
+
         body { 
-            font-family: 'PingFang TC', sans-serif; background-color: var(--bg-default); 
+            font-family: 'PingFang TC', sans-serif; background-color: var(--bg); color: var(--text);
             display: flex; flex-direction: column; align-items: center; 
             height: 100vh; margin: 0; overflow: hidden; touch-action: none;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s, color 0.3s;
         }
-        .container { width: 90%; max-width: 400px; margin-top: 40px; text-align: center; position: relative; flex-grow: 1; }
-        .status-header { height: 60px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; position: relative; }
-        .status-text { position: absolute; font-size: 2.2rem; font-weight: 900; opacity: 0; pointer-events: none; transition: opacity 0.2s; color: white; text-shadow: 0 2px 8px rgba(0,0,0,0.2); }
-        .card-wrapper { position: relative; width: 100%; height: 350px; }
+
+        /* 主選單介面 */
+        #main-menu {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            width: 100%; height: 100%; z-index: 10; transition: transform 0.5s ease;
+        }
+        .menu-btn {
+            width: 220px; padding: 18px; margin: 12px; border: none; border-radius: 15px;
+            background: var(--primary); color: white; font-size: 1.2rem; font-weight: bold; 
+            cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .dark-toggle-container {
+            position: fixed; bottom: 30px; right: 30px; display: flex; align-items: center; gap: 10px;
+        }
+        /* 切換開關樣式 */
+        .switch {
+            position: relative; display: inline-block; width: 50px; height: 26px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc; transition: .4s; border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px;
+            background-color: white; transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--primary); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        /* 練習介面 (預設隱藏) */
+        #game-view { display: none; width: 90%; max-width: 400px; text-align: center; flex-grow: 1; }
+        .status-header { height: 60px; display: flex; align-items: center; justify-content: center; position: relative; margin-top: 20px;}
+        .status-text { position: absolute; font-size: 2.2rem; font-weight: 900; opacity: 0; color: white; text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+
+        .card-wrapper { position: relative; width: 100%; height: 380px; margin-top: 10px; }
         .card {
-            position: absolute; width: 100%; height: 100%; background: var(--card); border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center;
-            font-size: 2rem; font-weight: bold; padding: 20px; box-sizing: border-box; cursor: grab; user-select: none; z-index: 2;
-            opacity: 0; transform: scale(0.9); transition: opacity 0.6s ease, transform 0.6s ease;
+            position: absolute; width: 100%; height: 100%; background: var(--card); border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem; font-weight: bold; padding: 25px; box-sizing: border-box; z-index: 2;
+            opacity: 0; transform: scale(0.9); transition: opacity 0.4s, transform 0.4s;
         }
-        .card.active { opacity: 1; transform: scale(1) translateX(0) translateY(0) rotate(0); }
-        .info { margin-top: 40px; color: #888; font-size: 0.8rem; line-height: 1.4; }
-        .stats { font-size: 0.8rem; color: #4a90e2; margin-top: 5px; font-weight: bold; }
+        .card.active { opacity: 1; transform: scale(1); }
+        
+        .back-btn { margin-top: 30px; background: none; border: 1.5px solid var(--text); color: var(--text); padding: 10px 20px; border-radius: 25px; cursor: pointer; opacity: 0.7; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2 id="title">載入中...</h2>
-    <div id="progress" style="color: #666;"></div>
-    <div id="statsInfo" class="stats"></div>
+<div id="main-menu">
+    <h1 style="font-size: 2.5rem; margin-bottom: 5px;">日文單字修行</h1>
+    <p id="total-stats" style="margin-bottom: 30px; opacity: 0.8;">讀取中...</p>
+    <button class="menu-btn" onclick="startSession('practice')">開始練習 (15題)</button>
+    <button class="menu-btn" style="background:#777;" onclick="startSession('all')">複習全部</button>
+    
+    <div class="dark-toggle-container">
+        <span style="font-size: 0.9rem;">深夜模式</span>
+        <label class="switch">
+            <input type="checkbox" id="dark-mode-input" onchange="toggleDarkMode()">
+            <span class="slider"></span>
+        </label>
+    </div>
+</div>
 
+<div id="game-view">
     <div class="status-header">
         <div id="textYes" class="status-text">會了</div>
         <div id="textNo" class="status-text">不會</div>
         <div id="textMaybe" class="status-text">不熟</div>
     </div>
-
+    <div id="progress" style="margin-bottom: 10px; font-weight: bold;"></div>
     <div class="card-wrapper"><div class="card" id="card"></div></div>
-
-    <div class="info">
-        ←左滑：會了 (減少出現) | 右滑→：不會 (增加出現)<br>
-        ↓下滑：不熟 (保持出現) | <span onclick="resetMemory()" style="text-decoration:underline; cursor:pointer;">清除記憶重來</span>
-    </div>
+    <button class="back-btn" onclick="goToMenu()">退出練習</button>
 </div>
 
 <script>
-    let words = [];
+    let allWords = [];
+    let currentPool = [];
     let currentIndex = 0;
     let isFlipped = false;
-    let startX = 0, startY = 0;
-    let currentX = 0, currentY = 0;
+    let startX = 0, startY = 0, currentX = 0, currentY = 0;
     
-    // 記憶資料結構
-    let memory = JSON.parse(localStorage.getItem('vocab_memory')) || {};
+    // 記憶資料庫
+    let memory = JSON.parse(localStorage.getItem('vocab_v3_data')) || {};
 
-    const body = document.body;
-    const card = document.getElementById('card');
+    // 初始化深色模式
+    if (localStorage.getItem('dark-mode') === 'true') {
+        document.body.classList.add('dark-mode');
+        document.getElementById('dark-mode-input').checked = true;
+    }
 
-    fetch('words.csv')
-        .then(res => res.text())
-        .then(text => {
-            const lines = text.trim().split('\n');
-            words = lines.map((line, index) => {
-                const parts = line.split(',');
-                return parts.length >= 2 ? { id: `w_${index}`, f: parts[0].trim(), b: parts[1].trim() } : null;
-            }).filter(i => i !== null);
-            if (words.length > 0) {
-                document.getElementById('title').innerText = "日文單字背誦";
-                sortWordsByMemory();
-                showNextCard();
-            }
-        });
+    // 載入 CSV
+    fetch('words.csv').then(res => res.text()).then(text => {
+        const lines = text.trim().split('\n');
+        allWords = lines.map((line, i) => {
+            const parts = line.split(',');
+            return { id: `w_${i}`, f: parts[0].trim(), b: parts[1].trim() };
+        }).filter(w => w.f);
+        updateMenuStats();
+    });
 
-    // 根據記憶權重排序：不會的排在前面
-    function sortWordsByMemory() {
-        words.sort((a, b) => {
-            let scoreA = memory[a.id] || 0;
-            let scoreB = memory[b.id] || 0;
-            return scoreA - scoreB; // 分數越低(不會)的排越前面
-        });
+    function updateMenuStats() {
+        const mastered = Object.values(memory).filter(v => v >= 3).length;
+        document.getElementById('total-stats').innerText = `總單字：${allWords.length} | 已精通：${mastered}`;
+    }
+
+    function toggleDarkMode() {
+        const isDark = document.body.classList.toggle('dark-mode');
+        localStorage.setItem('dark-mode', isDark);
+    }
+
+    // --- 核心邏輯：抽題系統 ---
+    function startSession(type) {
+        currentIndex = 0;
+        if (type === 'all') {
+            currentPool = [...allWords].sort(() => Math.random() - 0.5);
+        } else {
+            // 智慧抽題：
+            // 1. 優先挑選分數低 (不會/不熟) 的單字
+            // 2. 隨機加入少部分高分單字 (低機率複習)
+            const sorted = [...allWords].sort((a, b) => (memory[a.id] || 0) - (memory[b.id] || 0));
+            const weakWords = sorted.slice(0, 30); // 取最不熟的前30個
+            currentPool = weakWords.sort(() => Math.random() - 0.5).slice(0, 15); // 從中隨機抽15個
+        }
+
+        document.getElementById('main-menu').style.display = 'none';
+        document.getElementById('game-view').style.display = 'flex';
+        showNextCard();
+    }
+
+    function goToMenu() {
+        document.getElementById('main-menu').style.display = 'flex';
+        document.getElementById('game-view').style.display = 'none';
+        updateMenuStats();
     }
 
     function showNextCard() {
+        if (currentIndex >= currentPool.length) {
+            alert("本輪練習結束！做的棒！");
+            goToMenu();
+            return;
+        }
         isFlipped = false;
+        const card = document.getElementById('card');
         card.classList.remove('active');
-        card.style.opacity = "0";
-        card.style.transition = "none";
-        
         setTimeout(() => {
-            card.innerText = words[currentIndex].f;
-            card.style.color = "black";
+            card.innerText = currentPool[currentIndex].f;
+            card.style.color = "var(--text)";
+            card.style.transform = "scale(0.9)";
             card.offsetHeight; 
-            card.style.transition = "opacity 0.6s ease, transform 0.6s ease";
             card.classList.add('active');
-            card.style.opacity = "1";
-            card.style.transform = "scale(1)";
-            updateUI();
+            document.getElementById('progress').innerText = `題號：${currentIndex + 1} / ${currentPool.length}`;
         }, 150);
     }
 
-    function updateUI() {
-        document.getElementById('progress').innerText = `目前單字：${currentIndex + 1} / ${words.length}`;
-        let mastered = Object.values(memory).filter(v => v > 0).length;
-        document.getElementById('statsInfo').innerText = `已掌握：${mastered} 個單字`;
+    function saveProgress(type) {
+        const id = currentPool[currentIndex].id;
+        if (!memory[id]) memory[id] = 0;
+        if (type === 'yes') memory[id] += 1;
+        if (type === 'no') memory[id] = Math.max(0, memory[id] - 2);
+        if (type === 'maybe') memory[id] = Math.max(0, memory[id] - 1);
+        localStorage.setItem('vocab_v3_data', JSON.stringify(memory));
     }
 
-    // 儲存結果並記憶
-    function saveResult(type) {
-        let currentWord = words[currentIndex];
-        if (!memory[currentWord.id]) memory[currentWord.id] = 0;
-
-        if (type === 'yes') memory[currentWord.id] += 2;   // 會了加分
-        if (type === 'no') memory[currentWord.id] -= 2;    // 不會扣分
-        if (type === 'maybe') memory[currentWord.id] -= 1; // 不熟微扣分
-
-        localStorage.setItem('vocab_memory', JSON.stringify(memory));
-    }
-
-    function resetMemory() {
-        if(confirm("確定要清除所有學習紀錄嗎？")) {
-            localStorage.removeItem('vocab_memory');
-            location.reload();
-        }
-    }
-
-    // 滑動與點擊邏輯 (承襲之前的版本)
+    // --- 滑動與互動邏輯 ---
+    const card = document.getElementById('card');
     card.addEventListener('click', () => {
-        if (Math.abs(currentX - startX) < 10 && Math.abs(currentY - startY) < 10) {
+        if (Math.abs(currentX - startX) < 10) {
             isFlipped = !isFlipped;
-            card.innerText = isFlipped ? words[currentIndex].b : words[currentIndex].f;
-            card.style.color = isFlipped ? "var(--primary)" : "black";
+            card.innerText = isFlipped ? currentPool[currentIndex].b : currentPool[currentIndex].f;
+            card.style.color = isFlipped ? "var(--primary)" : "var(--text)";
         }
     });
 
@@ -148,62 +205,41 @@
         if (!startX) return;
         currentX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
         currentY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-        const diffX = currentX - startX;
-        const diffY = currentY - startY;
-        card.style.transform = `translateX(${diffX}px) translateY(${diffY}px) rotate(${diffX / 12}deg)`;
+        const dx = currentX - startX; const dy = currentY - startY;
+        card.style.transform = `translateX(${dx}px) translateY(${dy}px) rotate(${dx/12}deg)`;
 
-        if (diffY > 50 && Math.abs(diffY) > Math.abs(diffX)) {
-            updateVisuals('maybe', diffY);
-        } else if (diffX < -30) {
-            updateVisuals('yes', Math.abs(diffX));
-        } else if (diffX > 30) {
-            updateVisuals('no', diffX);
-        } else {
-            resetVisuals();
-        }
+        if (dy > 60 && Math.abs(dy) > Math.abs(dx)) { updateUI('maybe', dy); }
+        else if (dx < -40) { updateUI('yes', -dx); }
+        else if (dx > 40) { updateUI('no', dx); }
+        else { resetUI(); }
     };
 
-    function updateVisuals(type, dist) {
-        const alpha = Math.min(dist / 200, 0.5);
-        const opac = Math.min(dist / 100, 1);
-        resetVisuals();
-        if (type === 'maybe') { body.style.backgroundColor = `rgba(255, 193, 7, ${alpha})`; document.getElementById('textMaybe').style.opacity = opac; }
-        if (type === 'yes') { body.style.backgroundColor = `rgba(76, 175, 80, ${alpha})`; document.getElementById('textYes').style.opacity = opac; }
-        if (type === 'no') { body.style.backgroundColor = `rgba(244, 67, 54, ${alpha})`; document.getElementById('textNo').style.opacity = opac; }
+    function updateUI(type, d) {
+        resetUI();
+        const a = Math.min(d/200, 0.6);
+        document.body.style.backgroundColor = type==='yes' ? `rgba(76,175,80,${a})` : type==='no' ? `rgba(244,67,54,${a})` : `rgba(255,193,7,${a})`;
+        document.getElementById('text'+type.charAt(0).toUpperCase()+type.slice(1)).style.opacity = Math.min(d/100, 1);
     }
 
-    function resetVisuals() {
-        body.style.backgroundColor = "var(--bg-default)";
-        document.querySelectorAll('.status-text').forEach(el => el.style.opacity = 0);
+    function resetUI() {
+        document.body.style.backgroundColor = "var(--bg)";
+        document.querySelectorAll('.status-text').forEach(t => t.style.opacity = 0);
     }
 
     const handleEnd = () => {
         if (!startX) return;
-        const diffX = currentX - startX;
-        const diffY = currentY - startY;
-        
-        if (diffY > 150) {
-            saveResult('maybe');
-            exitCard('Y', 1000);
-        } else if (Math.abs(diffX) > 120) {
-            saveResult(diffX < 0 ? 'yes' : 'no');
-            exitCard('X', diffX > 0 ? 1000 : -1000, diffX/5);
-        } else {
-            card.style.transition = "transform 0.3s ease-out";
-            card.style.transform = "translateX(0) translateY(0) rotate(0)";
-            resetVisuals();
-        }
-        startX = 0; startY = 0;
+        const dx = currentX - startX; const dy = currentY - startY;
+        if (dy > 150) { saveProgress('maybe'); exit('Y', 1000); }
+        else if (Math.abs(dx) > 130) { saveProgress(dx < 0 ? 'yes' : 'no'); exit('X', dx > 0 ? 1000 : -1000, dx/5); }
+        else { card.style.transition = "transform 0.3s ease"; card.style.transform = "translate(0,0) rotate(0)"; resetUI(); }
+        startX = 0;
     };
 
-    function exitCard(axis, dist, rot = 0) {
-        card.style.transition = "transform 0.4s ease-in, opacity 0.4s";
-        card.style.transform = axis === 'X' ? `translateX(${dist}px) rotate(${rot}deg)` : `translateY(${dist}px)`;
+    function exit(axis, d, r=0) {
+        card.style.transition = "transform 0.4s ease-in, opacity 0.3s";
+        card.style.transform = axis==='X' ? `translateX(${d}px) rotate(${r}deg)` : `translateY(${d}px)`;
         card.style.opacity = "0";
-        resetVisuals();
-        currentIndex = (currentIndex + 1) % words.length;
-        // 如果一輪結束了，重新根據記憶排序
-        if (currentIndex === 0) sortWordsByMemory();
+        resetUI(); currentIndex++;
         setTimeout(showNextCard, 300);
     }
 
