@@ -87,26 +87,34 @@
 
     function showNextCard() {
         isFlipped = false;
-        card.classList.remove('active'); // 先清空畫面
+        // 1. 先徹底移除 active 類別並重置透明度
+        card.classList.remove('active');
+        card.style.opacity = "0";
         card.style.transition = "none";
-        card.style.transform = "scale(0.9)";
+        card.style.transform = "scale(0.9) translateX(0) rotate(0)";
         
-        // 短暫延遲後浮現新卡片
+        // 2. 稍微延長延遲，確保瀏覽器有時間渲染「消失」的狀態
         setTimeout(() => {
             card.innerText = words[currentIndex].f;
             card.style.color = "black";
+            // 3. 強制讓瀏覽器重新計算樣式
+            card.offsetHeight; 
             card.style.transition = "opacity 0.6s ease, transform 0.6s ease";
             card.classList.add('active');
+            card.style.opacity = "1";
+            card.style.transform = "scale(1)";
             updateProgress();
-        }, 300);
+        }, 150); // 縮短等待時間，讓節奏更緊湊
     }
 
     function updateProgress() {
         document.getElementById('progress').innerText = `進度：${currentIndex + 1} / ${words.length}`;
     }
 
+    // 點擊翻面邏輯
     card.addEventListener('click', () => {
-        if (Math.abs(currentX - startX) < 5) {
+        // 只有在幾乎沒有位移的情況下才判定為點擊
+        if (Math.abs(currentX - startX) < 10) {
             isFlipped = !isFlipped;
             card.innerText = isFlipped ? words[currentIndex].b : words[currentIndex].f;
             card.style.color = isFlipped ? "var(--primary)" : "black";
@@ -114,8 +122,8 @@
     });
 
     const handleStart = (e) => {
-        if (!card.classList.contains('active')) return;
         startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        currentX = startX; // 初始化避免計算誤差
         card.style.transition = "none";
     };
 
@@ -127,56 +135,55 @@
         
         card.style.transform = `translateX(${diff}px) rotate(${rotation}deg)`;
 
-        // 修改背景顏色而非卡片顏色
-        if (diff < -30) { // 往左滑 (會了)
+        if (diff < -30) {
             const alpha = Math.min(Math.abs(diff) / 200, 0.4);
             body.style.backgroundColor = `rgba(76, 175, 80, ${alpha})`;
             stampYes.style.opacity = Math.min(Math.abs(diff) / 100, 1);
             stampNo.style.opacity = 0;
-        } else if (diff > 30) { // 往右滑 (不會)
+        } else if (diff > 30) {
             const alpha = Math.min(diff / 200, 0.4);
             body.style.backgroundColor = `rgba(244, 67, 54, ${alpha})`;
             stampNo.style.opacity = Math.min(diff / 100, 1);
             stampYes.style.opacity = 0;
-        } else {
-            body.style.backgroundColor = "var(--bg-default)";
-            stampYes.style.opacity = 0;
-            stampNo.style.opacity = 0;
         }
     };
 
     const handleEnd = () => {
-        const diff = currentX - startX;
         if (!startX) return;
-
-        if (Math.abs(diff) > 120) {
+        const diff = currentX - startX;
+        
+        // 判斷滑動距離
+        if (Math.abs(diff) > 100) {
             // 滑掉卡片
             const flyX = diff > 0 ? 1000 : -1000;
             card.style.transition = "transform 0.4s ease-in, opacity 0.4s";
             card.style.transform = `translateX(${flyX}px) rotate(${diff/5}deg)`;
             card.style.opacity = "0";
             
-            // 背景恢復並切換下一張
+            // 重置背景
             body.style.backgroundColor = "var(--bg-default)";
             stampYes.style.opacity = 0;
             stampNo.style.opacity = 0;
             
+            // 切換索引並呼叫下一張
             currentIndex = (currentIndex + 1) % words.length;
-            setTimeout(showNextCard, 400);
+            setTimeout(showNextCard, 300);
         } else {
-            // 彈回原位
+            // 距離不夠，彈回原位
             card.style.transition = "transform 0.3s ease-out";
             card.style.transform = "translateX(0) rotate(0)";
             body.style.backgroundColor = "var(--bg-default)";
             stampYes.style.opacity = 0;
             stampNo.style.opacity = 0;
         }
+        
+        // 重要：重置座標避免重複觸發
         startX = 0;
         currentX = 0;
     };
 
-    card.addEventListener('touchstart', handleStart);
-    card.addEventListener('touchmove', handleMove);
+    card.addEventListener('touchstart', handleStart, {passive: true});
+    card.addEventListener('touchmove', handleMove, {passive: true});
     card.addEventListener('touchend', handleEnd);
     card.addEventListener('mousedown', handleStart);
     window.addEventListener('mousemove', handleMove);
